@@ -1,5 +1,5 @@
-Point3D source_pos
-Point3D mic_pos
+geometry_msgs/PointStamped source_pos
+geometry_msgs/PointStamped mic_pos
 FloatArray source_wav
 ---
 FloatArray waveform

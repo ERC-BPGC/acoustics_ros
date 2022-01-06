@@ -10,6 +10,7 @@ project(acoustics_ros)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -50,8 +51,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   FloatArray.msg
-  Point3D.msg
-  Point3DArray.msg
+  PointArray.msg
+  SignalArray.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -71,6 +72,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 ################################################
@@ -105,7 +107,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES acoustics_ros
- CATKIN_DEPENDS rospy std_msgs message_runtime
+ CATKIN_DEPENDS rospy std_msgs message_runtime geometry_msgs
 #  DEPENDS system_lib
 )
 

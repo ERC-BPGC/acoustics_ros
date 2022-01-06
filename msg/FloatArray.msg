@@ -1,1 +1,1 @@
-float32[] array
+float64[] array

@@ -4,10 +4,21 @@ import rospy
 from enum import Enum
 from pra_utils import core
 from acoustics_ros.msg import *
+from geometry_msgs.msg import PointStamped,TransformStamped
+import tf2_geometry_msgs
 
 # Temporary test parameters NEED TO UPDATE
 path_to_rcf = "../rcf/test.rcf"
-# tf_source_to_mic 
+
+# Source to Mic transform
+tf_source_to_mic =  TransformStamped()
+tf_source_to_mic.translation.x = 0.0
+tf_source_to_mic.translation.y = 0.0
+tf_source_to_mic.translation.z = 0.05
+tf_source_to_mic.rotation.x = 0.0
+tf_source_to_mic.rotation.y = 0.0
+tf_source_to_mic.rotation.z = 0.0
+tf_source_to_mic.rotation.w = 0.0
 
 class State(Enum):
     IDLE = 0
@@ -16,21 +27,20 @@ class State(Enum):
 
 class AcousticsNode:
     def __init__(self):
-        self.source_pos = Point3D()
-        self.mic_pos = Point3D()
+        self.source_pos = PointStamped()
+        self.mic_pos = PointStamped()
         self.input_signal = SignalArray()
         self.state = State.IDLE
 
         self.pub = rospy.Publisher('acoustics_node', SignalArray, queue_size=10)
 
-        self.sub_pos = rospy.Subscriber('robot_loc', Point3D, AcousticsNode.position_callback)
+        self.sub_pos = rospy.Subscriber('robot_loc', PointStamped, AcousticsNode.position_callback)
         self.sub_signal = rospy.Subscriber('input_signal', SignalArray, AcousticsNode.signal_callback)
 
     def position_callback(self, msg1):
         if msg1 != self.source_pos:
-            # Put transform for source to mic here
             self.source_pos = msg1
-            self.mic_pos = [msg1.x, msg1.y, msg1.z + 0.05]
+            self.mic_pos = tf2_geometry_msgs.do_transform_pose(self.source_pos, tf_source_to_mic)
             self.state = State.RECOMPUTE
         else:
             self.state = State.PUBLISH
@@ -50,7 +60,7 @@ class AcousticsNode:
         self.room.simulate()
         self.rir = list(self.room.mic_array.signals[0])
 
-        pub.publish(self.rir)
+        self.pub.publish(self.rir)
 
     def timer_callback(self, event=None):
         # will check state and either publish or recompute and publish
@@ -67,7 +77,7 @@ if __name__ == '__main__':
         node = AcousticsNode()
 
         while not rospy.is_shutdown():
-            rir = Point3DArray()
+            rir = PointArray()
             rate.sleep()
 
     except rospy.ROSInterruptException:

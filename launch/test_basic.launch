@@ -1,0 +1,6 @@
+<launch>
+    <param name='path_to_rcf' value='simple_pipe.rcf' />
+    <param name='fs' value='16000' type='int'/>
+    
+    <node name='acoustics_node' pkg='acoustics_ros' type='acoustics_node'/>
+</launch>

@@ -1,11 +1,13 @@
 #! /usr/bin/env python3
 
-import rospy
 from enum import Enum
-from pra_utils import core
-from acoustics_ros.msg import *
-from geometry_msgs.msg import PointStamped,TransformStamped
+
+import rospy
 import tf2_geometry_msgs
+from acoustics_ros.msg import SignalArray
+from geometry_msgs.msg import PoseStamped, TransformStamped
+from pra_utils.core import ComplexRoom
+from os.path import isfile
 
 # Temporary test parameters NEED TO UPDATE
 path_to_rcf = "../rcf/test.rcf"
@@ -20,65 +22,81 @@ tf_source_to_mic.rotation.y = 0.0
 tf_source_to_mic.rotation.z = 0.0
 tf_source_to_mic.rotation.w = 0.0
 
-class State(Enum):
-    IDLE = 0
-    RECOMPUTE = 1
-    PUBLISH = 2
+class SimState(Enum):
+	IDLE = 0
+	RECOMPUTE = 1
+	READY = 2
 
 class AcousticsNode:
-    def __init__(self):
-        self.source_pos = PointStamped()
-        self.mic_pos = PointStamped()
-        self.input_signal = SignalArray()
-        self.state = State.IDLE
+	def __init__(self):
+		
+		self.state = SimState.IDLE
 
-        self.pub = rospy.Publisher('acoustics_node', SignalArray, queue_size=10)
+		self.tf_robot_to_source = rospy.get_param('tf_robot_to_source')
+		self.tf_robot_to_mic = rospy.get_param('tf_robot_to_mic')
 
-        self.sub_pos = rospy.Subscriber('robot_loc', PointStamped, AcousticsNode.position_callback)
-        self.sub_signal = rospy.Subscriber('input_signal', SignalArray, AcousticsNode.signal_callback)
+		self.path_to_rcf = rospy.get_param('path_to_rcf')
+		if not isfile(self.path_to_rcf):
+			rospy.logerr('Rcf not found.')
+			rospy.signal_shutdown()
 
-    def position_callback(self, msg1):
-        if msg1 != self.source_pos:
-            self.source_pos = msg1
-            self.mic_pos = tf2_geometry_msgs.do_transform_pose(self.source_pos, tf_source_to_mic)
-            self.state = State.RECOMPUTE
-        else:
-            self.state = State.PUBLISH
+		self.last_robot_pose = None
+		self.source_pos = None
+		self.mic_pos = None
 
-    def signal_callback(self, msg1):
-        if msg1 != self.input_signal:
-            self.input_signal = msg1
-            self.state = State.RECOMPUTE
-        else:
-            self.state = State.PUBLISH
-    
-    def ComputeWaveform(self):
-        self.room = core.ComplexRoom.from_rcf(path_to_rcf)
-        self.room.add_source(position=self.source_pos, signal=self.input_signal)
-        self.room.add_microphone_array(loc=self.mic_pos)
+		# self.input_signal = SignalArray()
+		self.rir = None
 
-        self.room.simulate()
-        self.rir = list(self.room.mic_array.signals[0])
+		self.pub = rospy.Publisher('acoustic_signal', SignalArray, queue_size=10)
 
-        self.pub.publish(self.rir)
+		self.sub_pos = rospy.Subscriber('robot_pose', PoseStamped, AcousticsNode.pose_callback)
+		# self.sub_signal = rospy.Subscriber('input_signal', SignalArray, AcousticsNode.signal_callback)
 
-    def timer_callback(self, event=None):
-        # will check state and either publish or recompute and publish
-        if self.state == State.IDLE:
-            pass
-        elif self.state == State.RECOMPUTE:
-            self.ComputeWaveform()
-        else:
-            self.pub.publish(self.rir)
+	def pose_callback(self, msg1):
+		"""Called when new pose data received. """
+		if msg1.pose != self.last_robot_pose:
+			rospy.loginfo("New pose!")
+			self.last_robot_pose = msg1.pose
+
+			self.source_pos = tf2_geometry_msgs.do_transform_pose(self.last_robot_pose, self.tf_robot_to_source)
+			self.mic_pos = tf2_geometry_msgs.do_transform_pose(self.last_robot_pose, self.tf_robot_to_mic)
+
+			self.state = SimState.RECOMPUTE
+		else:
+			self.state = SimState.READY
+
+	def timer_callback(self, event=None):
+		"""For periodically publishing simulated waveform. """
+	
+		if self.state == SimState.RECOMPUTE:
+			self.compute_waveform()
+			self.state = SimState.READY
+		
+		if self.state == SimState.READY:
+			self.pub.publish(self.rir)
+
+	# def signal_callback(self, msg1):
+	# 	if msg1 != self.input_signal:
+	# 		self.input_signal = msg1
+	# 		self.state = State.RECOMPUTE
+	# 	else:
+	# 		self.state = State.PUBLISH
+	
+	def compute_waveform(self):
+		self.room = ComplexRoom.from_rcf(self.path_to_rcf)
+		self.room.add_source(position=self.source_pos, signal=self.input_signal)
+		self.room.add_microphone_array(loc=self.mic_pos)
+
+		self.room.compute_rir()
+		self.rir = list(self.room.rir[0][0])
+	
 
 if __name__ == '__main__':
-    try:
-        rospy.init_node('acoustics_node', anonymous=True)
-        node = AcousticsNode()
+	try:
+		rospy.init_node('acoustics_node', anonymous=False)
+		node = AcousticsNode()
 
-        while not rospy.is_shutdown():
-            rir = PointArray()
-            rate.sleep()
+		rospy.spin()
 
-    except rospy.ROSInterruptException:
-        pass
+	except rospy.ROSInterruptException:
+		pass

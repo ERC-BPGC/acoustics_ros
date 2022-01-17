@@ -1,11 +1,12 @@
 #! /usr/bin/env python3
 
 from enum import Enum
+from lib2to3.pytree import Base
 from os.path import isfile
 
 import rospy
 import tf2_geometry_msgs
-from geometry_msgs.msg import PoseStamped, TransformStamped
+from geometry_msgs.msg import PoseStamped, TransformStamped, Point32
 from pra_utils.core import ComplexRoom
 
 from acoustics_ros.msg import SignalArray
@@ -21,35 +22,39 @@ class AcousticsNode:
 		
 		self.state = SimState.IDLE
 
-		self.tf_robot_to_source = rospy.get_param('tf_robot_to_source')
-		self.tf_robot_to_mic = rospy.get_param('tf_robot_to_mic')
+		try:
+			self.path_to_rcf = rospy.get_param('path_to_rcf')
+			if not isfile(self.path_to_rcf):
+				raise FileNotFoundError(f'RCF file not found at {self.path_to_rcf}.')
 
-		self.path_to_rcf = rospy.get_param('path_to_rcf')
-		if not isfile(self.path_to_rcf):
-			rospy.logerr('Rcf not found.')
-			rospy.signal_shutdown()
-
-		self.last_robot_pose = None
-		self.source_pos = None
-		self.mic_pos = None
+		except BaseException as err:
+			rospy.logerr(err)
+			rospy.signal_shutdown('Error obtaining necessary values from parameter server!')
 
 		# self.input_signal = SignalArray()
 		self.rir = None
 
-		self.pub = rospy.Publisher('acoustic_signal', SignalArray, queue_size=10)
+		self.signal_pub = rospy.Publisher('acoustic_signal', SignalArray, queue_size=10)
 
-		self.sub_pos = rospy.Subscriber('robot_pose', PoseStamped, AcousticsNode.pose_callback)
+		self.mic_pos_sub = rospy.Subscriber('robot_pose', PoseStamped, AcousticsNode.mic_callback)
+		self.source_pos_sub = rospy.Subscriber('source_pos', Point32, AcousticsNode.source_callback)
+
+		self.last_mic_pos = Point32()
+		self.last_source_pos = Point32()
 		# self.sub_signal = rospy.Subscriber('input_signal', SignalArray, AcousticsNode.signal_callback)
 
-	def pose_callback(self, msg1):
-		"""Called when new pose data received. """
-		if msg1.pose != self.last_robot_pose:
-			rospy.loginfo("New pose!")
-			self.last_robot_pose = msg1.pose
-
-			self.source_pos = tf2_geometry_msgs.do_transform_pose(self.last_robot_pose, self.tf_robot_to_source)
-			self.mic_pos = tf2_geometry_msgs.do_transform_pose(self.last_robot_pose, self.tf_robot_to_mic)
-
+	def mic_callback(self, msg):
+		if msg != self.last_mic_pos:
+			self.last_mic_pos = msg
+		
+			self.state = SimState.RECOMPUTE
+		else:
+			self.state = SimState.READY
+	
+	def source_callback(self, msg):
+		if msg != self.last_source_pos:
+			self.last_source_pos = msg
+		
 			self.state = SimState.RECOMPUTE
 		else:
 			self.state = SimState.READY
@@ -62,7 +67,7 @@ class AcousticsNode:
 			self.state = SimState.READY
 		
 		if self.state == SimState.READY:
-			self.pub.publish(self.rir)
+			self.signal_pub.publish(self.rir)
 
 	# def signal_callback(self, msg1):
 	# 	if msg1 != self.input_signal:
@@ -73,8 +78,8 @@ class AcousticsNode:
 	
 	def compute_waveform(self):
 		self.room = ComplexRoom.from_rcf(self.path_to_rcf)
-		self.room.add_source(position=self.source_pos, signal=self.input_signal)
-		self.room.add_microphone_array(loc=self.mic_pos)
+		self.room.add_source(position=self.last_source_pos)
+		self.room.add_microphone(self.last_mic_pos)
 
 		self.room.compute_rir()
 		self.rir = list(self.room.rir[0][0])

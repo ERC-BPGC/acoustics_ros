@@ -1,6 +1,6 @@
 <launch>
-    <param name='path_to_rcf' value='simple_pipe.rcf' />
+    <param name='path_to_rcf' value='$(find acoustics_ros)/res/rcf/L_pipe.rcf' />
     <param name='fs' value='16000' type='int'/>
     
-    <node name='acoustics_node' pkg='acoustics_ros' type='acoustics_node'/>
+    <node name='acoustics_node' pkg='acoustics_ros' type='main_node.py'/>
 </launch>

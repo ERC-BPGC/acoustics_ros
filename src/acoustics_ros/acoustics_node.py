@@ -1,26 +1,15 @@
 #! /usr/bin/env python3
 
 from enum import Enum
+from os.path import isfile
 
 import rospy
 import tf2_geometry_msgs
-from acoustics_ros.msg import SignalArray
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from pra_utils.core import ComplexRoom
-from os.path import isfile
 
-# Temporary test parameters NEED TO UPDATE
-path_to_rcf = "../rcf/test.rcf"
+from acoustics_ros.msg import SignalArray
 
-# Source to Mic transform
-tf_source_to_mic =  TransformStamped()
-tf_source_to_mic.translation.x = 0.0
-tf_source_to_mic.translation.y = 0.0
-tf_source_to_mic.translation.z = 0.05
-tf_source_to_mic.rotation.x = 0.0
-tf_source_to_mic.rotation.y = 0.0
-tf_source_to_mic.rotation.z = 0.0
-tf_source_to_mic.rotation.w = 0.0
 
 class SimState(Enum):
 	IDLE = 0
@@ -89,14 +78,4 @@ class AcousticsNode:
 
 		self.room.compute_rir()
 		self.rir = list(self.room.rir[0][0])
-	
 
-if __name__ == '__main__':
-	try:
-		rospy.init_node('acoustics_node', anonymous=False)
-		node = AcousticsNode()
-
-		rospy.spin()
-
-	except rospy.ROSInterruptException:
-		pass

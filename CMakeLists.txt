@@ -70,11 +70,14 @@ catkin_install_python(
 
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
+## see http://wiki.ros.org/catkin/CMakeLists.txt#Installing_roslaunch_Files_or_Other_Resources
+install(DIRECTORY res/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/res
+)
+install(DIRECTORY launch/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+)
+message("sakdfh ${CATKIN_PACKAGE_SHARE_DESTINATION}")
 
 #############
 ## Testing ##

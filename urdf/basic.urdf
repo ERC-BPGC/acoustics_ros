@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<robot name='basic_bot'>
+	<link name='base_link'>
+		<visual>
+			<geometry>
+				<sphere radius='0.05'/>
+			</geometry>
+		</visual>
+		<collision>
+			<geometry>
+				<sphere radius='0.05'/>
+			</geometry>
+		</collision>
+	</link>
+
+	<link name='source'>
+		<visual>
+			<geometry>
+				<sphere radius='0.02'/>
+			</geometry>
+		</visual>
+		<collision>
+			<geometry>
+				<sphere radius='0.02'/>
+			</geometry>
+		</collision>
+	</link>
+
+	<link name='mic'>
+		<visual>
+			<geometry>
+				<sphere radius='0.02'/>
+			</geometry>
+		</visual>
+		<collision>
+			<geometry>
+				<sphere radius='0.02'/>
+			</geometry>
+		</collision>
+	</link>
+
+	<joint name='base_to_source' type='fixed'>
+		<parent link='base_link'/>
+		<child link='source'/>
+		<origin xyz='0.07 0 0'/>
+	</joint>
+
+	<joint name='base_to_mic' type='fixed'>
+		<parent link='base_link'/>
+		<child link='mic'/>
+		<origin xyz='0 0 0.07'/>
+	</joint>
+</robot>

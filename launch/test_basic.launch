@@ -1,6 +1,11 @@
 <launch>
-    <param name='path_to_rcf' value='$(find acoustics_ros)/res/rcf/L_pipe.rcf' />
-    <param name='fs' value='16000' type='int'/>
-    
-    <node name='acoustics_node' pkg='acoustics_ros' type='main_node.py'/>
+	<node name='acoustics_node' pkg='acoustics_ros' type='main_node.py' output='screen'/>
+		<param name='path_to_rcf' value='$(find acoustics_ros)/res/rcf/simple_pipe.rcf' />
+		<param name='fs' value='16000' type='int'/>
+
+	<node name='robot' pkg='acoustics_ros' type='basic_test.py'/>
+	
+	<node name='plotter' pkg='acoustics_ros' type='plotter.py' output='screen' />
+		
+
 </launch>

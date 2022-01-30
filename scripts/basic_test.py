@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist, Point32, Pose2D
 
 robot_pose = Pose2D()
 robot_pose.x = 5.0
+robot_pose.y = 1.
 
 pub_mic = rospy.Publisher('/mic_pos', Point32, queue_size=5)
 pub_source = rospy.Publisher('/source_pos', Point32, queue_size=5)
@@ -17,9 +18,12 @@ def sub_callback(msg):
 	source_pos = Point32()
 	source_pos.x = robot_pose.x
 	source_pos.y = robot_pose.y
+	source_pos.z = 1.
 
-	mic_pos = source_pos
-	mic_pos.z += 0.05
+	mic_pos = Point32()
+	mic_pos.x = source_pos.x
+	mic_pos.y = source_pos.y
+	mic_pos.z = source_pos.z + 0.1
 
 	pub_source.publish(source_pos)
 	pub_mic.publish(mic_pos)

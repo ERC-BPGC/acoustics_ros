@@ -56,6 +56,7 @@ include_directories(
 catkin_install_python(
   PROGRAMS
   scripts/basic_test.py
+  scripts/plotter.py
   nodes/main_node.py  # required??
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
@@ -77,7 +78,7 @@ install(DIRECTORY res/
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
-message("sakdfh ${CATKIN_PACKAGE_SHARE_DESTINATION}")
+# message("sakdfh ${CATKIN_PACKAGE_SHARE_DESTINATION}")
 
 #############
 ## Testing ##

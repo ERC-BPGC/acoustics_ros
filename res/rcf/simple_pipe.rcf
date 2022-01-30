@@ -1,0 +1,173 @@
+ray_tracing: false
+air_absorption: false
+max_order: 4
+fs: 16000
+walls:
+- id: 0
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 0.0
+    - 2.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 2.0
+- id: 1
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 0.0
+    - 2.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 2.0
+  - - 0.0
+    - 2.0
+    - 2.0
+- id: 2
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 0.0
+    - 0.0
+  - - 15.0
+    - 2.0
+    - 0.0
+  - - 15.0
+    - 2.0
+    - 2.0
+- id: 3
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 0.0
+    - 0.0
+  - - 15.0
+    - 2.0
+    - 2.0
+  - - 15.0
+    - 0.0
+    - 2.0
+- id: 4
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 15.0
+    - 0.0
+    - 0.0
+  - - 15.0
+    - 0.0
+    - 2.0
+- id: 5
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 15.0
+    - 0.0
+    - 2.0
+  - - 0.0
+    - 0.0
+    - 2.0
+- id: 6
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 2.0
+    - 0.0
+  - - 0.0
+    - 2.0
+    - 0.0
+  - - 0.0
+    - 2.0
+    - 2.0
+- id: 7
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 2.0
+    - 0.0
+  - - 0.0
+    - 2.0
+    - 2.0
+  - - 15.0
+    - 2.0
+    - 2.0
+- id: 8
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 2.0
+    - 0.0
+- id: 9
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 2.0
+    - 0.0
+  - - 15.0
+    - 2.0
+    - 0.0
+- id: 10
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 0.0
+    - 2.0
+  - - 15.0
+    - 2.0
+    - 2.0
+  - - 0.0
+    - 2.0
+    - 2.0
+- id: 11
+  material:
+    absorption: 0.5
+    scattering: null
+  corners:
+  - - 15.0
+    - 0.0
+    - 2.0
+  - - 0.0
+    - 2.0
+    - 2.0
+  - - 0.0
+    - 0.0
+    - 2.0

@@ -1,16 +1,13 @@
 #! /usr/bin/env python3
 
 from enum import Enum
-from lib2to3.pytree import Base
 from os.path import isfile
 
 import rospy
-import tf2_geometry_msgs
-from geometry_msgs.msg import PoseStamped, TransformStamped, Point32
+from geometry_msgs.msg import Point32
 from pra_utils.core import ComplexRoom
 
-from acoustics_ros.msg import SignalArray
-
+from acoustics_ros.msg import SignalArray, FloatArray
 
 class SimState(Enum):
 	IDLE = 0
@@ -26,18 +23,22 @@ class AcousticsNode:
 			self.path_to_rcf = rospy.get_param('path_to_rcf')
 			if not isfile(self.path_to_rcf):
 				raise FileNotFoundError(f'RCF file not found at {self.path_to_rcf}.')
+			else:
+				rospy.loginfo(f'Using RCF {self.path_to_rcf}.')
 
 		except BaseException as err:
 			rospy.logerr(err)
 			rospy.signal_shutdown('Error obtaining necessary values from parameter server!')
 
 		# self.input_signal = SignalArray()
-		self.rir = None
+		self.rirs = SignalArray()
 
 		self.signal_pub = rospy.Publisher('acoustic_signal', SignalArray, queue_size=10)
 
-		self.mic_pos_sub = rospy.Subscriber('robot_pose', PoseStamped, AcousticsNode.mic_callback)
-		self.source_pos_sub = rospy.Subscriber('source_pos', Point32, AcousticsNode.source_callback)
+		self.mic_pos_sub = rospy.Subscriber('mic_pos', Point32, self.mic_callback)
+		self.source_pos_sub = rospy.Subscriber('source_pos', Point32, self.source_callback)
+
+		self.pub_timer = rospy.Timer(rospy.Duration(1), self.timer_callback)
 
 		self.last_mic_pos = Point32()
 		self.last_source_pos = Point32()
@@ -67,7 +68,7 @@ class AcousticsNode:
 			self.state = SimState.READY
 		
 		if self.state == SimState.READY:
-			self.signal_pub.publish(self.rir)
+			self.signal_pub.publish(self.rirs)
 
 	# def signal_callback(self, msg1):
 	# 	if msg1 != self.input_signal:
@@ -78,9 +79,21 @@ class AcousticsNode:
 	
 	def compute_waveform(self):
 		self.room = ComplexRoom.from_rcf(self.path_to_rcf)
-		self.room.add_source(position=self.last_source_pos)
-		self.room.add_microphone(self.last_mic_pos)
+		srcpos = point_to_list(self.last_source_pos)
+		micpos = point_to_list(self.last_mic_pos)
+		rospy.loginfo(f'src: {srcpos}, mic: {micpos}')
+
+		self.room.add_source(srcpos)
+		self.room.add_microphone(micpos)
 
 		self.room.compute_rir()
-		self.rir = list(self.room.rir[0][0])
+		rirarray = FloatArray()
+		rirarray.array = list(self.room.rir[0][0])
+		self.rirs.signals = [rirarray]
+
+		rospy.loginfo(f'self.rirs.signals: len = {len(self.rirs.signals)}, type = {type(self.rirs.signals)}')
+
+def point_to_list(p: Point32):
+	"""Converts geometry_msgs.msg.Point to list[3]"""
+	return [p.x, p.y, p.z]
 
